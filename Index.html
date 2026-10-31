@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>کپی مختصات UTM</title>
+<style>
+:root{--bg:#e9eff1;--card:#fff;--ink:#10252d;--mut:#5a6f77;--line:#c3d0d5;--acc:#0a6c85;--accfg:#fff;--ok:#1b7a43;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1a1f;--card:#16272e;--ink:#e6f0f3;--mut:#90a8b0;--line:#2b434c;--acc:#4cc3de;--accfg:#06202a;--ok:#5fd18a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Vazirmatn,Tahoma,sans-serif;line-height:1.7}
+main{max-width:520px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.3rem;font-weight:800;margin:8px 0 4px}
+p.sub{margin:0 0 18px;color:var(--mut);font-size:.9rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+label{display:block;font-size:.85rem;color:var(--mut);margin-bottom:6px}
+input,select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;direction:ltr;text-align:left}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.row{display:flex;gap:10px;margin-top:12px}
+.row>*{flex:1}
+button{font:inherit;font-weight:600;border-radius:10px;border:1px solid var(--acc);background:transparent;color:var(--acc);padding:10px 12px;cursor:pointer}
+button.main{background:var(--acc);color:var(--accfg)}
+.out{direction:ltr;text-align:left;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.15rem;font-weight:600;word-break:break-all;padding:14px;border-radius:10px;background:var(--bg);border:1px dashed var(--line);min-height:56px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;text-align:center}
+.grid div{background:var(--bg);border-radius:10px;padding:8px 4px}
+.grid b{display:block;direction:ltr;font-size:1rem}
+.grid span{font-size:.75rem;color:var(--mut)}
+#msg{min-height:1.6em;margin-top:10px;font-size:.9rem;color:var(--mut)}
+#msg.ok{color:var(--ok);font-weight:600}
+#msg.err{color:#c0392b}
+ol{margin:0;padding:0 22px 0 0}
+ol li{padding:6px 0;border-bottom:1px solid var(--line)}
+ol li:last-child{border-bottom:0}
+ol li span{direction:ltr;unicode-bidi:isolate;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95rem;display:inline-block;margin-inline-end:10px}
+ol li button{padding:2px 10px;font-size:.8rem;float:left}
+button:disabled{opacity:.45;cursor:default}
+.empty{color:var(--mut);font-size:.9rem;margin:0}
+footer{text-align:center;color:var(--mut);font-size:.8rem;margin-top:8px;line-height:1.9}
+footer a{color:var(--acc);direction:ltr;unicode-bidi:isolate}
+</style>
+</head>
+<body>
+<main>
+<h1>کپی مختصات UTM</h1>
+<p class="sub">مختصات نقطه را به UTM (دیتوم WGS84) تبدیل و با یک لمس کپی کنید.</p>
+
+<div class="card">
+  <button class="main" id="gps" style="width:100%">موقعیت فعلی من</button>
+  <label for="ll" style="margin-top:14px">یا عرض و طول جغرافیایی (درجه اعشاری)</label>
+  <input id="ll" inputmode="text" placeholder="35.6892, 51.3890" autocomplete="off">
+  <div class="row"><button id="conv">تبدیل به UTM</button></div>
+</div>
+
+<div class="card">
+  <div class="out" id="out">—</div>
+  <div class="grid">
+    <div><b id="z">–</b><span>زون</span></div>
+    <div><b id="e">–</b><span>Easting</span></div>
+    <div><b id="n">–</b><span>Northing</span></div>
+  </div>
+  <div class="row">
+    <div><label for="fmt">قالب خروجی</label>
+      <select id="fmt">
+        <option value="0">39S 512345 3987654</option>
+        <option value="1">512345, 3987654</option>
+        <option value="2">512345 3987654</option>
+        <option value="3">E 512345 N 3987654 Zone 39S</option>
+      </select></div>
+    <div><label for="dec">رقم اعشار</label>
+      <select id="dec"><option>0</option><option>1</option><option>2</option></select></div>
+  </div>
+  <div class="row"><button id="copy">کپی این نقطه</button><button class="main" id="add">افزودن به فهرست</button></div>
+  <div id="msg" role="status"></div>
+</div>
+<div class="card">
+  <label>فهرست نقاط (<span id="cnt">0</span>)</label>
+  <p class="empty" id="empty">هر نقطه را تبدیل کنید و «افزودن به فهرست» را بزنید.</p>
+  <ol id="pl"></ol>
+  <div class="row"><button class="main" id="cpall">کپی همه (هر نقطه در یک خط)</button><button id="clr">پاک کردن فهرست</button></div>
+  <div id="lmsg" role="status" style="min-height:1.6em;margin-top:10px;font-size:.9rem;color:var(--mut)"></div>
+</div>
+<footer>تهیه و توسعه داده شده توسط احسان یاقوتی<br><a href="mailto:e.y1234@gmail.com">e.y1234@gmail.com</a></footer>
+</main>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var cur=null;
+function toUTM(lat,lon){
+  var D=Math.PI/180,a=6378137,f=1/298.257223563,k0=0.9996;
+  var zone=Math.floor((lon+180)/6)+1; if(zone>60)zone=60;
+  var lam=(lon-((zone-1)*6-180+3))*D, phi=lat*D;
+  var n=f/(2-f), n2=n*n, n3=n2*n, n4=n2*n2;
+  var A=a/(1+n)*(1+n2/4+n4/64);
+  var al=[n/2-2*n2/3+5*n3/16, 13*n2/48-3*n3/5, 61*n3/240];
+  var e=Math.sqrt(f*(2-f)), s=Math.sin(phi);
+  var t=Math.sinh(Math.atanh(s)-e*Math.atanh(e*s));
+  var xp=Math.atan2(t,Math.cos(lam));
+  var ep=Math.atanh(Math.sin(lam)/Math.sqrt(1+t*t));
+  var xi=xp, eta=ep;
+  for(var j=1;j<=3;j++){
+    xi+=al[j-1]*Math.sin(2*j*xp)*Math.cosh(2*j*ep);
+    eta+=al[j-1]*Math.cos(2*j*xp)*Math.sinh(2*j*ep);
+  }
+  var E=500000+k0*A*eta, N=k0*A*xi;
+  if(lat<0)N+=10000000;
+  var band="CDEFGHJKLMNPQRSTUVWX".charAt(Math.max(0,Math.min(19,Math.floor((lat+80)/8))));
+  return {zone:zone,band:band,E:E,N:N};
+}
+function fmt(){return cur?fmtP(cur):""}
+function fmtP(c){
+  var d=+$("dec").value, E=c.E.toFixed(d), N=c.N.toFixed(d), z=c.zone+c.band;
+  switch($("fmt").value){
+    case "1":return E+", "+N;
+    case "2":return E+" "+N;
+    case "3":return "E "+E+" N "+N+" Zone "+z;
+    default:return z+" "+E+" "+N;
+  }
+}
+function msg(t,c){var m=$("msg");m.textContent=t;m.className=c||""}
+function show(){
+  renderList();
+  if(!cur){$("out").textContent="—";return}
+  var d=+$("dec").value;
+  $("out").textContent=fmt();
+  $("z").textContent=cur.zone+cur.band;
+  $("e").textContent=cur.E.toFixed(d);
+  $("n").textContent=cur.N.toFixed(d);
+}
+function calc(lat,lon){
+  if(!isFinite(lat)||!isFinite(lon)||Math.abs(lat)>84||lat<-80||Math.abs(lon)>180){
+    cur=null;show();msg("مختصات معتبر نیست. عرض باید بین ‎-80 و 84 و طول بین ‎-180 و 180 باشد.","err");return}
+  cur=toUTM(lat,lon);show();msg("");
+}
+function parse(s){
+  s=s.replace(/[۰-۹]/g,function(c){return c.charCodeAt(0)-1776}).replace(/[٠-٩]/g,function(c){return c.charCodeAt(0)-1632}).replace(/٫/g,".").replace(/،/g,",");
+  var m=s.match(/-?\d+(?:\.\d+)?/g);
+  return m&&m.length>=2?[parseFloat(m[0]),parseFloat(m[1])]:null;
+}
+$("conv").onclick=function(){
+  var p=parse($("ll").value);
+  if(!p){msg("دو عدد (عرض و طول جغرافیایی) وارد کنید.","err");return}
+  calc(p[0],p[1]);
+};
+$("ll").addEventListener("keydown",function(e){if(e.key==="Enter")$("conv").click()});
+function getGPS(){
+  if(!navigator.geolocation){msg("مرورگر شما موقعیت‌یابی را پشتیبانی نمی‌کند.","err");return}
+  msg("در حال درخواست مجوز موقعیت… در پنجرهٔ مرورگر «اجازه دادن» را بزنید.");
+  navigator.geolocation.getCurrentPosition(function(p){
+    $("ll").value=p.coords.latitude.toFixed(6)+", "+p.coords.longitude.toFixed(6);
+    calc(p.coords.latitude,p.coords.longitude);
+    if(cur)msg("دقت موقعیت: حدود "+Math.round(p.coords.accuracy)+" متر");
+  },function(er){
+    var c=er&&er.code;
+    if(location.protocol==="file:"){msg("مرورگر خواندن موقعیت را در فایل محلی (file://) مسدود می‌کند. فایل را از طریق آدرس https یا localhost باز کنید. مثلاً در پوشهٔ فایل دستور python -m http.server 8000 را اجرا کنید و http://localhost:8000/utm-copy.html را باز کنید. یا مختصات را دستی وارد کنید.","err");return}
+    if(c===1)msg("مجوز موقعیت داده نشد. روی آیکون قفل یا تنظیمات کنار آدرس مرورگر بزنید، «موقعیت» (Location) را روی «اجازه» بگذارید و دوباره بزنید. در موبایل هم مطمئن شوید موقعیت دستگاه روشن است. می‌توانید مختصات را دستی هم وارد کنید.","err");
+    else if(c===2)msg("موقعیت در دسترس نیست. GPS یا سرویس موقعیت دستگاه را روشن کنید و دوباره امتحان کنید.","err");
+    else if(c===3)msg("زمان دریافت موقعیت تمام شد. دوباره امتحان کنید.","err");
+    else msg("دریافت موقعیت ممکن نشد. مختصات را دستی وارد کنید.","err");
+  },
+  {enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+$("gps").onclick=getGPS;
+getGPS();
+$("fmt").onchange=$("dec").onchange=show;
+var pts=[];
+function lmsg(t,c){var m=$("lmsg");m.textContent=t;m.style.color=c=="ok"?"var(--ok)":c=="err"?"#c0392b":"var(--mut)"}
+function renderList(){
+  var ol=$("pl");ol.innerHTML="";
+  pts.forEach(function(p,i){
+    var li=document.createElement("li"),s=document.createElement("span"),b=document.createElement("button");
+    s.textContent=fmtP(p);b.textContent="حذف";b.setAttribute("aria-label","حذف نقطه "+(i+1));
+    b.onclick=function(){pts.splice(i,1);renderList();lmsg("")};
+    li.appendChild(s);li.appendChild(b);ol.appendChild(li);
+  });
+  $("cnt").textContent=pts.length;
+  $("empty").style.display=pts.length?"none":"";
+  $("cpall").disabled=$("clr").disabled=!pts.length;
+}
+renderList();
+function doCopy(t,ok,fail){
+  function fb(){
+    var x=document.createElement("textarea");x.value=t;x.style.position="fixed";x.style.opacity="0";
+    document.body.appendChild(x);x.select();
+    var r=false;try{r=document.execCommand("copy")}catch(e){}
+    document.body.removeChild(x);r?ok():fail();
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,fb);else fb();
+}
+$("add").onclick=function(){
+  if(!cur){lmsg("ابتدا مختصات را تبدیل کنید.","err");return}
+  pts.push(cur);renderList();lmsg("نقطهٔ "+pts.length+" اضافه شد.","ok");
+};
+$("clr").onclick=function(){pts=[];renderList();lmsg("")};
+$("cpall").onclick=function(){
+  if(!pts.length)return;
+  doCopy(pts.map(fmtP).join("\n"),
+    function(){lmsg(pts.length+" نقطه کپی شد؛ هر نقطه در یک خط.","ok")},
+    function(){lmsg("کپی خودکار ممکن نشد.","err")});
+};
+$("copy").onclick=function(){
+  if(!cur){msg("ابتدا مختصات را تبدیل کنید.","err");return}
+  var t=fmt();
+  function fallback(){
+    var x=document.createElement("textarea");x.value=t;x.style.position="fixed";x.style.opacity="0";
+    document.body.appendChild(x);x.select();
+    var ok=false;try{ok=document.execCommand("copy")}catch(e){}
+    document.body.removeChild(x);
+    ok?msg("کپی شد. هر جا لازم است پیست کنید.","ok"):msg("کپی خودکار ممکن نشد. متن بالا را نگه دارید و دستی کپی کنید.","err");
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){msg("کپی شد. هر جا لازم است پیست کنید.","ok")},fallback);
+  }else fallback();
+};
+})();
+</script>
+</body>
+</html>
