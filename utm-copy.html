@@ -58,6 +58,7 @@ footer a{color:var(--acc);direction:ltr;unicode-bidi:isolate}
     <div><b id="e">–</b><span>Easting</span></div>
     <div><b id="n">–</b><span>Northing</span></div>
   </div>
+  <div id="acc" style="margin-top:10px;font-size:.85rem;color:var(--mut);text-align:center"></div>
   <div class="row">
     <div><label for="fmt">قالب خروجی</label>
       <select id="fmt">
@@ -107,7 +108,8 @@ function toUTM(lat,lon){
   return {zone:zone,band:band,E:E,N:N};
 }
 function fmt(){return cur?fmtP(cur):""}
-function fmtP(c){
+function fmtP(c){return fmtB(c)}
+function fmtB(c){
   var d=+$("dec").value, E=c.E.toFixed(d), N=c.N.toFixed(d), z=c.zone+c.band;
   switch($("fmt").value){
     case "1":return E+", "+N;
@@ -119,17 +121,19 @@ function fmtP(c){
 function msg(t,c){var m=$("msg");m.textContent=t;m.className=c||""}
 function show(){
   renderList();
-  if(!cur){$("out").textContent="—";return}
+  if(!cur){$("out").textContent="—";$("acc").textContent="";return}
   var d=+$("dec").value;
   $("out").textContent=fmt();
   $("z").textContent=cur.zone+cur.band;
   $("e").textContent=cur.E.toFixed(d);
   $("n").textContent=cur.N.toFixed(d);
+  var a=cur.acc;
+  $("acc").textContent=a==null?"ورودی دستی (دقت نامشخص)":"دقت موقعیت: ±"+Math.round(a)+" متر ("+(a<=10?"عالی":a<=30?"خوب":a<=100?"متوسط":"ضعیف")+")";
 }
-function calc(lat,lon){
+function calc(lat,lon,acc){
   if(!isFinite(lat)||!isFinite(lon)||Math.abs(lat)>84||lat<-80||Math.abs(lon)>180){
     cur=null;show();msg("مختصات معتبر نیست. عرض باید بین ‎-80 و 84 و طول بین ‎-180 و 180 باشد.","err");return}
-  cur=toUTM(lat,lon);show();msg("");
+  cur=toUTM(lat,lon);cur.acc=acc;show();msg("");
 }
 function parse(s){
   s=s.replace(/[۰-۹]/g,function(c){return c.charCodeAt(0)-1776}).replace(/[٠-٩]/g,function(c){return c.charCodeAt(0)-1632}).replace(/٫/g,".").replace(/،/g,",");
@@ -147,8 +151,7 @@ function getGPS(){
   msg("در حال درخواست مجوز موقعیت… در پنجرهٔ مرورگر «اجازه دادن» را بزنید.");
   navigator.geolocation.getCurrentPosition(function(p){
     $("ll").value=p.coords.latitude.toFixed(6)+", "+p.coords.longitude.toFixed(6);
-    calc(p.coords.latitude,p.coords.longitude);
-    if(cur)msg("دقت موقعیت: حدود "+Math.round(p.coords.accuracy)+" متر");
+    calc(p.coords.latitude,p.coords.longitude,p.coords.accuracy);
   },function(er){
     var c=er&&er.code;
     if(location.protocol==="file:"){msg("مرورگر خواندن موقعیت را در فایل محلی (file://) مسدود می‌کند. فایل را از طریق آدرس https یا localhost باز کنید. مثلاً در پوشهٔ فایل دستور python -m http.server 8000 را اجرا کنید و http://localhost:8000/utm-copy.html را باز کنید. یا مختصات را دستی وارد کنید.","err");return}
